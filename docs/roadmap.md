@@ -271,7 +271,7 @@ Obiettivo: controllo accessi
 
 # EPIC 7 – Observability & Security Operations
 
-🎯 Obiettivo: dashboard + controllo umano
+Obiettivo: dashboard + controllo umano
 
 ---
 
@@ -313,58 +313,3 @@ Obiettivo: controllo accessi
 * WebSocket endpoint
 * Redis Streams → frontend bridge
 * live security feed
-
----
-
-# DIFFERENZA CHIAVE RISPETTO ALLA TUA VERSIONE
-
-## Prima
-
-* login / refresh / logout
-* entità isolate
-* focus CRUD
-
----
-
-## ✅ Ora
-
-* sistema event-driven
-* session lifecycle completo
-* security reactive
-* OAuth2 real implementation
-* distributed architecture
-* control plane + data plane separati
-
----
-
-# 🧭 MAPPATURA DDD (IMPORTANTE)
-
-| Layer          | Contenuto                   |
-| -------------- | --------------------------- |
-| Domain         | Aggregates + Rules + Events |
-| Application    | Use Cases                   |
-| Infrastructure | DB, Redis, JWT, Streams     |
-| Interface      | FastAPI + Dashboard         |
-
----
-
-# 🚀 OUTPUT FINALE
-
-Ora hai:
-
-✔ backlog enterprise-grade
-✔ separazione DDD reale
-✔ event-driven design integrato
-✔ roadmap per Identity Provider completo
-
----
-
-# 🧠 Se vuoi il prossimo step
-
-Posso aiutarti a:
-
-👉 trasformare queste epics in **Jira-ready backlog (story points + dependency graph)**
-👉 oppure costruire **modello C4 architecture completo del sistema**
-👉 oppure iniziare il **codice reale strutturato (repo layout completo)**
-
-Dimmi la direzione.
