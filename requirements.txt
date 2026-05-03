@@ -4,3 +4,17 @@ sqlalchemy
 passlib[bcrypt]
 PyJWT
 pydantic
+python-dotenv
+alembic
+pytest
+pytest-asyncio
+httpx
+pytest-cov
+coverage
+black
+isort
+flake8
+mypy
+redis
+celery
+flower
