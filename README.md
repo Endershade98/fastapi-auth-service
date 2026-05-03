@@ -1,122 +1,239 @@
-# Identity and Access Control Platform (OAuth2 / OpenID-style System)
+# Identity and Access Control Platform
 
 ## Overview
 
-This project is a production-oriented Identity and Access Control Platform designed to manage authentication, authorization, session lifecycle, and security operations in a distributed microservices environment.
+This project implements a domain-driven Identity and Access Control Platform inspired by OAuth2 and OpenID Connect.
 
-Rather than implementing a simple authentication service, the system is architected as a full Identity Provider, inspired by OAuth2 and OpenID Connect principles, with a strong focus on security, scalability, and event-driven consistency.
+It is designed as a **stateless-first authentication system**, where state is introduced only when strictly necessary for security guarantees (sessions, refresh tokens, revocation).
 
-The platform addresses real-world challenges such as token revocation in stateless systems, distributed authentication across microservices, session lifecycle management, and secure authorization enforcement.
+The system addresses core challenges in distributed identity management:
+
+- token revocation in stateless architectures
+- refresh token rotation with reuse detection
+- session lifecycle consistency across services
+- secure authorization code flows (PKCE)
+- event-driven security auditing
 
 ---
 
 ## Problem Statement
 
-Modern microservice architectures require more than basic login functionality. Traditional JWT-based authentication introduces several limitations:
+Modern microservice architectures require identity systems that go beyond simple JWT authentication.
 
-* Tokens are stateless and cannot be revoked easily
-* Session management is inconsistent across distributed services
-* Authorization logic becomes fragmented across microservices
-* Security events (reuse attacks, compromise detection) are difficult to track
-* Auditability and operational visibility are often missing
+Pure stateless JWT approaches introduce several limitations:
 
-This project was designed to systematically solve these issues by evolving from a minimal authentication service into a fully event-driven identity control platform.
+- no native token revocation mechanism
+- inconsistent session tracking across services
+- fragmented authorization logic
+- limited observability on security-critical events
+- weak support for attack detection (replay, reuse, compromise)
 
----
-
-## Key Features
-
-### Authentication and Session Management
-
-* Secure login and logout mechanisms
-* Password hashing using secure algorithms
-* JWT issuance using RS256 asymmetric signing
-* Refresh token rotation with reuse detection
-* Stateful session management via TokenSession aggregate
-
-### OAuth2 Authorization Flow
-
-* Authorization Code Flow with PKCE support
-* Secure client validation and redirect URI enforcement
-* Short-lived authorization codes with single-use constraints
-* Token exchange endpoint compliant with OAuth2 standards
-
-### Authorization Model
-
-* Role-Based Access Control (RBAC)
-* Scope-based authorization aligned with OAuth principles
-* Middleware-based enforcement across microservices
-* Extensible policy engine for future ABAC integration
-
-### Token Security and Lifecycle Management
-
-* Token revocation system with distributed propagation
-* Redis-based blacklist for real-time invalidation
-* Key rotation mechanism for JWT signing keys (kid-based)
-* JWKS endpoint for secure public key distribution
-
-### Event-Driven Architecture
-
-* Domain events for all security-critical operations
-* Outbox pattern for reliable event persistence
-* Redis Streams for asynchronous processing
-* Consumers for audit logging, security monitoring, and blacklist updates
-
-### Observability and Security Operations
-
-* Full audit trail of authentication and authorization events
-* Detection of token reuse and session compromise
-* Security event classification and tracking
-* Foundation for a real-time security operations dashboard
+This system was designed to explicitly address these constraints by combining:
+- controlled state (sessions, refresh tokens)
+- event-driven security modeling
+- strict domain boundaries (DDD)
 
 ---
 
-## Architecture
+## Architecture Overview
 
 The system follows Clean Architecture and Domain-Driven Design principles:
 
-* Domain Layer: Core business rules, aggregates, and domain events
-* Application Layer: Use cases such as login, refresh, revoke, and authorization
-* Infrastructure Layer: Database (MySQL), Redis, JWT services, event streaming
-* Interface Layer: FastAPI-based REST APIs and future admin dashboard
+### Layers
 
-The architecture is fully event-driven, enabling loose coupling between authentication, security processing, and observability components.
+- **Domain Layer**
+  - Aggregates, Value Objects, Domain Rules, Domain Events
+  - No framework or infrastructure dependency
+
+- **Application Layer**
+  - Use cases (login, refresh, revoke, authorize)
+  - Orchestration of domain logic
+
+- **Infrastructure Layer**
+  - MySQL persistence
+  - Redis (caching, streams, blacklist)
+  - JWT signing/verification (RS256)
+
+- **Interface Layer**
+  - FastAPI REST APIs
 
 ---
 
-## Design Principles
+## Domain Model Highlights
 
-* Stateless authentication enhanced with controlled state where necessary
-* Strong separation of concerns using DDD boundaries
-* Event-driven consistency for security and auditability
-* Zero-trust approach for microservice communication
-* Secure-by-design token lifecycle management
-* Extensibility for enterprise-grade identity features
+The domain is structured around explicit consistency boundaries:
+
+- **Strongly typed Value Objects**
+  - eliminate primitive obsession
+  - enforce validation at construction time
+
+- **Aggregates**
+  - User
+  - OAuthClient
+  - TokenSession
+  - AuthorizationCode
+
+Each aggregate enforces its own invariants and lifecycle rules.
+
+- **Domain Rules Engine**
+  - isolates business logic from state mutation
+  - improves testability and clarity
+
+- **Domain Events**
+  - represent immutable facts
+  - used for auditability and future event-driven workflows
+
+---
+
+## Design Decisions
+
+### Why event-driven architecture?
+
+Security-critical operations (authentication, token rotation, session revocation) are modeled as domain events to ensure:
+
+- full auditability of identity actions
+- decoupled security processing
+- extensibility toward real-time security analytics
+- future integration with monitoring and SIEM systems
+
+---
+
+### Why Redis Streams instead of Kafka?
+
+Redis Streams were chosen to:
+- reduce operational complexity
+- support low-latency event processing
+- enable replayable event consumption
+- fit a single-region deployment model
+
+Kafka is a valid future evolution path for multi-region scaling.
+
+---
+
+### Why RS256 JWT?
+
+Asymmetric signing allows:
+
+- independent verification by downstream services
+- secure key rotation without service downtime
+- separation between token issuer and consumers
+- support for JWKS-based public key distribution
+
+---
+
+### Why refresh token rotation?
+
+Refresh token rotation is used to mitigate replay attacks in stateless systems:
+
+- each refresh token is single-use
+- reuse detection triggers session invalidation
+- prevents credential stuffing via stolen refresh tokens
+
+---
+
+## Security Model
+
+The system follows a **zero-trust identity model**:
+
+- Tokens are treated as untrusted until verified
+- Refresh tokens are strictly single-use
+- Sessions are explicitly stateful and revocable
+- Authorization codes are single-use (PKCE enforced)
+
+### Threats addressed:
+
+- token replay attacks
+- refresh token reuse
+- session hijacking
+- authorization code interception
+- compromised session propagation
+
+---
+
+## Event-Driven Design
+
+All security-critical actions emit domain events:
+
+- UserRegistered
+- UserLoggedIn
+- TokenIssued
+- TokenRotated
+- SessionRevoked
+- SessionCompromised
+- AuthorizationCodeConsumed
+
+### Event properties
+
+- immutable
+- versioned
+- timestamped
+- tied to aggregate identity
+
+### Versioning strategy
+
+Events are versioned to ensure backward compatibility:
+
+- default version = 1
+- backward-compatible evolution supported
+- transformation layer enables schema upgrades
 
 ---
 
 ## Technologies
 
-* Python (FastAPI)
-* MySQL (persistent storage)
-* Redis (caching, blacklist, event streams)
-* JWT (RS256 asymmetric cryptography)
-* Clean Architecture + Domain-Driven Design
+- Python 3.14
+- FastAPI
+- MySQL (persistent storage)
+- Redis (caching + streams + blacklist)
+- JWT (RS256 asymmetric cryptography)
+- Pytest (domain-first testing strategy)
 
 ---
 
 ## Architectural Outcome
 
-The final system is not a simple authentication service but a distributed identity control platform capable of:
+The system is not a simple authentication service.
 
-* Managing secure authentication at scale
-* Enforcing authorization policies across services
-* Handling token lifecycle and revocation reliably
-* Providing real-time security observability
-* Supporting event-driven security operations
+It is an identity control platform capable of:
+
+- enforcing secure authentication at scale
+- managing distributed session consistency
+- handling token lifecycle and revocation reliably
+- providing full auditability of identity events
+- supporting future event-driven security analytics systems
+
+---
+
+## Engineering Principles
+
+- Domain-driven design with strict bounded contexts
+- Strong typing via Value Objects
+- Explicit invariants in aggregates
+- Event-driven consistency for security operations
+- Zero-trust authentication model
+- Framework-independent domain layer
 
 ---
 
 ## Purpose
 
-This project was built as a problem-solving exercise focused on addressing real-world distributed system challenges in identity management. It demonstrates how an authentication system evolves into a full identity and security infrastructure when applied to microservice architectures with strict security and scalability requirements.
+This project was built as a systems design exercise focused on real-world identity challenges in distributed architectures.
+
+It demonstrates:
+
+- how authentication evolves into identity infrastructure
+- how state must be carefully reintroduced into stateless systems
+- how domain modeling improves security correctness
+- how event-driven design improves observability and auditability
+
+---
+
+## Notes for Reviewers
+
+The design intentionally separates:
+- authentication (identity verification)
+- authorization (policy enforcement)
+- session management (state tracking)
+- security auditing (event-driven layer)
+
+This separation is critical for scalability, security correctness, and long-term maintainability in distributed systems.
