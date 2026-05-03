@@ -6,10 +6,6 @@ PyJWT
 pydantic
 python-dotenv
 alembic
-pytest
-pytest-asyncio
-httpx
-pytest-cov
 coverage
 black
 isort
@@ -18,3 +14,8 @@ mypy
 redis
 celery
 flower
+pytest
+pytest-cov
+pytest-mock
+pytest-asyncio
+httpx
