@@ -1,0 +1,1 @@
+# src/domain/events/session_created_event.py

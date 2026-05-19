@@ -1,0 +1,1 @@
+# src/application/interfaces/password_hasher.py

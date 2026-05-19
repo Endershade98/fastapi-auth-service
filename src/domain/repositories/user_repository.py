@@ -1,0 +1,1 @@
+# src/domain/repositories/user_repository.py

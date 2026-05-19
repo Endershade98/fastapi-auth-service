@@ -1,0 +1,1 @@
+# src/application/interfaces/session_repository.py

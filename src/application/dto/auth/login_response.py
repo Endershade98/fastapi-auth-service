@@ -1,0 +1,1 @@
+# src/application/dto/auth/login_response.py

@@ -1,0 +1,1 @@
+# src/application/interfaces/event_dispatcher.py

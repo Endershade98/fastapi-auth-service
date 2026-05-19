@@ -1,0 +1,1 @@
+# src/application/exceptions/authentication_error.py

@@ -1,0 +1,1 @@
+# src/application/dto/auth/logout_response.py

@@ -1,0 +1,1 @@
+# src/application/dto/session/session_info_response.py
