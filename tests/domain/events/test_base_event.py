@@ -1,6 +1,6 @@
 # tests/domain/events/test_base_event.py
 
-from src.domain.events.base import DomainEvent
+from src.domain.events.domain.base import DomainEvent
 
 
 def test_base_event_creation():

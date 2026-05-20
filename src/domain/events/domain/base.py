@@ -1,4 +1,4 @@
-# src/domain/events/base.py
+# src/domain/events/domain/base.py
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -7,8 +7,15 @@ from uuid import uuid4
 
 @dataclass(frozen=True, kw_only=True)
 class DomainEvent:
+
+    aggregate_id: str
+
     event_id: str = field(default_factory=lambda: str(uuid4()))
-    occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    occurred_at: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
     version: int = 1
 
     @property

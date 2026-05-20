@@ -2,6 +2,7 @@
 
 import uuid
 from dataclasses import dataclass
+from src.domain.exceptions.domain_error import DomainValidationError
 
 
 @dataclass(frozen=True)
@@ -9,7 +10,10 @@ class UserId:
     value: str
 
     def __post_init__(self):
-        uuid.UUID(self.value)
+        try:
+            uuid.UUID(self.value)
+        except Exception:
+            raise DomainValidationError("Invalid UserId UUID")
     
     @staticmethod
     def new():
